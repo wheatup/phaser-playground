@@ -1,13 +1,18 @@
-const scene = new Phaser.Scene('Game');
+const gameScene = new Phaser.Scene('Game');
 
-scene.preload = function () {
+gameScene.init = function() {
+	this.isGameOver = false;
+	this.cameras.main.fadeIn(200);
+}
+
+gameScene.preload = function () {
 	this.load.image('background', './assets/images/background.png');
 	this.load.image('player', './assets/images/player.png');
 	this.load.image('enemy', './assets/images/dragon.png');
 	this.load.image('goal', './assets/images/treasure.png');
 }
 
-scene.create = function () {
+gameScene.create = function () {
 	this.background = this.add.sprite(0, 0, 'background');
 	this.background.setOrigin(0, 0);
 
@@ -38,22 +43,24 @@ scene.create = function () {
 	this.goal.setScale(.5);
 }
 
-scene.update = function () {
+gameScene.update = function () {
+	if (this.isGameOver) {
+		return;
+	}
+
 	if (this.input.activePointer.isDown) {
 		this.player.x += this.player.speed;
 	}
 
 	if (Phaser.Geom.Intersects.RectangleToRectangle(this.player.getBounds(), this.goal.getBounds())) {
 		console.log('A winner is you!');
-		this.scene.restart();
-		return;
+		return this.win();
 	}
 
 	this.enemies.getChildren().forEach(enemy => {
 		if (Phaser.Geom.Intersects.RectangleToRectangle(this.player.getBounds(), enemy.getBounds())) {
 			console.log('You dieded.');
-			this.scene.restart();
-			return;
+			return this.gameOver();
 		}
 
 		if ((enemy.speed < 0 && enemy.y <= enemy.minBound)
@@ -64,6 +71,25 @@ scene.update = function () {
 	});
 }
 
+gameScene.gameOver = function () {
+	this.isGameOver = true;
+	this.cameras.main.shake(300, 0.02);
+	this.cameras.main.once('camerashakecomplete', camera => {
+		this.cameras.main.fadeOut(500);
+	}, this);
+	this.cameras.main.once('camerafadeoutcomplete', camera => {
+		this.scene.restart();
+	}, this);
+}
+
+gameScene.win = function () {
+	this.isGameOver = true;
+	this.cameras.main.fadeOut(500);
+	this.cameras.main.once('camerafadeoutcomplete', camera => {
+		this.scene.restart();
+	}, this);
+}
+
 window.onload = () => {
 	new Phaser.Game({
 		width: 640,
@@ -71,7 +97,7 @@ window.onload = () => {
 		type: Phaser.AUTO,
 		parent: "game",
 		pixelArt: true,
-		scene: scene,
+		scene: gameScene,
 		physics: {
 			default: "arcade",
 			arcade: {
