@@ -1,7 +1,27 @@
 const gameScene = new Phaser.Scene('Game');
 
 gameScene.init = function () {
-
+	this.words = [
+		{
+			key: 'building',
+			setXY: { x: 100, y: 240 },
+			spanish: 'edificio'
+		}, {
+			key: 'house',
+			setXY: { x: 240, y: 280 },
+			setScale: { x: 0.8, y: 0.8 },
+			spanish: 'casa'
+		}, {
+			key: 'car',
+			setXY: { x: 400, y: 300 },
+			setScale: { x: 0.8, y: 0.8 },
+			spanish: 'automóvil'
+		}, {
+			key: 'tree',
+			setXY: { x: 550, y: 250 },
+			spanish: 'árbol'
+		}
+	]
 }
 
 gameScene.preload = function () {
@@ -20,36 +40,29 @@ gameScene.preload = function () {
 }
 
 gameScene.create = function () {
-	this.items = this.add.group([
-		{
-			key: 'building',
-			setXY: { x: 100, y: 240 }
-		}, {
-			key: 'house',
-			setXY: { x: 240, y: 280 },
-			setScale: { x: 0.8, y: 0.8 }
-		}, {
-			key: 'car',
-			setXY: { x: 400, y: 300 },
-			setScale: { x: 0.8, y: 0.8 }
-		}, {
-			key: 'tree',
-			setXY: { x: 550, y: 250 }
-		}
-	]);
+	this.items = this.add.group(this.words);
 
 	let bg = this.add.sprite(0, 0, 'background').setOrigin(0, 0).setDepth(-1);
 	bg.setInteractive();
 
-	Phaser.Actions.Call(this.items.getChildren(), item => {
+	this.items.getChildren().forEach((item, index) => {
 		item.setInteractive();
 
-		item.resizeTween = this.tweens.add({
+		item.correctTween = this.tweens.add({
 			targets: item,
 			scaleX: 1.2,
 			scaleY: 1.2,
 			duration: 200,
-			ease: 'Quad.easeInOut',
+			ease: 'Quad.easeOut',
+			yoyo: true,
+			paused: true
+		});
+
+		item.wrongTween = this.tweens.add({
+			targets: item,
+			duration: 200,
+			angle: 45,
+			ease: 'Quad.easeOut',
 			yoyo: true,
 			paused: true
 		});
@@ -61,24 +74,59 @@ gameScene.create = function () {
 			paused: true
 		});
 
-
 		item.on('pointerdown', function () {
-			this.resizeTween.restart();
-		}, item);
+			let result = gameScene.processAnswer(gameScene.words[index].spanish);
+			if(result){
+				this.correctTween.restart();
+			}else{
+				this.wrongTween.restart();
+			}
+			gameScene.showNextQuestion();
+		});
 
-		item.on('pointerover', function(){
-			this.opacityTween.restart();
-		}, item);
+		item.on('pointerover', function () {
+			item.opacityTween.restart();
+		});
 
-		item.on('pointerout', function(){
-			this.opacityTween.stop();
-			this.alpha = 1;
-		}, item);
+		item.on('pointerout', function () {
+			item.opacityTween.stop();
+			item.alpha = 1;
+		});
+
+		let word = this.words[index];
+
+		word.sound = this.sound.add(`au_${word.key}`);
 	}, this);
+
+	this.wordText = this.add.text(30, 20, '', {
+		font: '28px Open Sans',
+		fill: '#fff'
+	});
+
+	this.correctSound = this.sound.add('au_correct');
+	this.wrongSound = this.sound.add('au_wrong');
+
+	this.showNextQuestion();
 }
 
 gameScene.update = function () {
 
+}
+
+gameScene.showNextQuestion = function () {
+	this.nextWord = Phaser.Math.RND.pick(this.words);
+	this.nextWord.sound.play();
+	this.wordText.setText(this.nextWord.spanish);
+}
+
+gameScene.processAnswer = function(userResponse) {
+	if(userResponse === this.nextWord.spanish){
+		this.correctSound.play();
+		return true;
+	}else{
+		this.wrongSound.play();
+		return false;
+	}
 }
 
 window.onload = () => {
