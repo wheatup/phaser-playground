@@ -1,0 +1,33 @@
+{
+	"name": "Level 1",
+	"level": {
+		"width": 360,
+		"height": 700
+	},
+	"spawner": {
+		"interval": 3000,
+		"speed": 100,
+		"lifespan": 10000
+	},
+	"player": {
+		"x": 300,
+		"y": 500
+	},
+	"goal": {
+		"x": 30,
+		"y": 20
+	},
+	"platforms": [
+		{ "x": 72, "y": 450, "numTiles": 6, "key": "block" },
+		{ "x": 0, "y": 330, "numTiles": 8, "key": "block" },
+		{ "x": 72, "y": 210, "numTiles": 8, "key": "block" },
+		{ "x": 0, "y": 90, "numTiles": 7, "key": "block" },
+		{ "x": 0, "y": 560, "numTiles": 1, "key": "ground" }
+	],
+	"fires": [
+		{"x": 200, "y": 90},
+		{"x": 300, "y": 210},
+		{"x": 90, "y": 330},
+		{"x": 90, "y": 450}
+	]
+}
